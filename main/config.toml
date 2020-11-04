@@ -1,0 +1,5 @@
+"LogFilePath" = "./service.log"
+"Port" = "4183"
+"ServedURL" = "/"
+"ReadTimeout" = 10
+"WriteTimeout" = 10
