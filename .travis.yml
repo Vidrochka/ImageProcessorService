@@ -3,4 +3,4 @@ go:
   - 1.15.x
 
 script:
-  go test -v
+  go test ./...
