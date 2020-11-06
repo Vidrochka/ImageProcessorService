@@ -1,22 +1,25 @@
 package handler
 
 import (
+	"ImageProcessorService/main/handler/dto"
 	"ImageProcessorService/main/handler/utils"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 //Selector - select handler
 type Selector struct {
-	logger *log.Logger
-	db     *utils.DataBase
-	config *utils.Configuration
+	logger    *log.Logger
+	db        *utils.DataBase
+	config    *utils.Configuration
+	validator *utils.Validator
 }
 
 //CreateSelector - create selector
-func CreateSelector(logger *log.Logger, db *utils.DataBase, config *utils.Configuration) *Selector {
-	instanse := &Selector{logger: logger, db: db, config: config}
+func CreateSelector(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator) *Selector {
+	instanse := &Selector{logger: logger, db: db, config: config, validator: validator}
 
 	logger.Println("Selector created")
 
@@ -30,14 +33,14 @@ func (selector *Selector) ServeHTTP(resp http.ResponseWriter, req *http.Request)
 	if req.RequestURI != selector.config.ServedURL {
 		selector.logger.Println("Not supported url: " + req.RequestURI + "| need: " + selector.config.ServedURL)
 		resp.WriteHeader(405)
-		fmt.Fprint(resp, "Not supported url: "+req.RequestURI+"| need: "+selector.config.ServedURL)
+		fmt.Fprint(resp, dto.Response{Message: "Not supported url: " + req.RequestURI + "| need: " + selector.config.ServedURL, ResCode: 0}.ToJSON())
 		return
 	}
 
 	if req.Method != http.MethodPost {
 		selector.logger.Println("Not Post request")
 		resp.WriteHeader(405)
-		fmt.Fprint(resp, "Served only post request")
+		fmt.Fprint(resp, dto.Response{Message: "Served only post request", ResCode: 0}.ToJSON())
 		return
 	}
 
@@ -46,37 +49,37 @@ func (selector *Selector) ServeHTTP(resp http.ResponseWriter, req *http.Request)
 
 	if contentType == "" {
 		selector.logger.Println("Request without Content-type")
-		fmt.Fprint(resp, "You need set Content-type")
+		fmt.Fprint(resp, dto.Response{Message: "You need set Content-type", ResCode: 0}.ToJSON())
 		return
 	}
 
 	var handler Handler = nil
 
-	switch contentType {
-	case "application/json":
+	if contentType == "application/json" {
 		switch req.Header.Get("Req-type") {
 		case "BASE64":
-			handler = CreateBase64(selector.logger, selector.db)
+			handler = CreateBase64(selector.logger, selector.db, selector.config, selector.validator)
 			break
 		case "URL-LOAD":
-			handler = CreateURLLoader(selector.logger, selector.db, []string{"jpg"})
+			handler = CreateURLLoader(selector.logger, selector.db, selector.config, selector.validator)
 			break
 		case "RESTORE":
-			handler = CreateRestore(selector.logger, selector.db)
+			handler = CreateRestore(selector.logger, selector.db, selector.validator)
 			break
 		case "RESTORE-PREVIEW":
-			handler = CreateSquareImageHandler(selector.logger, selector.db, []string{"jpg"})
+			handler = CreateScaleImageHandler(selector.logger, selector.db, selector.config, selector.validator)
 			break
 		default:
-			fmt.Fprint(resp, "Served only request with header Req-type = BASE64/URL-LOAD/RESTORE/RESTORE-PREVIEW")
+			fmt.Fprint(resp, dto.Response{Message: "Served only request with header Req-type = BASE64/URL-LOAD/RESTORE/RESTORE-PREVIEW", ResCode: 0}.ToJSON())
 			return
 		}
-		break
-	case "multipart/form-data":
-		break
-	default:
-		fmt.Fprint(resp, "Served only request with application/json or multipart/form-data Content-type")
-		return
+	} else {
+		if strings.Contains(contentType, "multipart/form-data") {
+			handler = CreateMultipartFormDataHandler(selector.logger, selector.db, selector.config, selector.validator)
+		} else {
+			fmt.Fprint(resp, dto.Response{Message: "Served only request with application/json or multipart/form-data Content-type", ResCode: 2}.ToJSON())
+			return
+		}
 	}
 
 	if handler == nil {

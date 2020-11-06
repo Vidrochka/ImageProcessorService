@@ -3,3 +3,8 @@
 "ServedURL" = "/"
 "ReadTimeout" = 10
 "WriteTimeout" = 10
+"FileSaveExtensionList" = "jpg,jpeg,png"
+"ScaledImageRestoreExtension" = "jpg,jpeg,png"
+"ScaledImageH" = 100
+"ScapedImageW" = 100
+"DataBasePath" = "./ImageCollection.db"

@@ -12,12 +12,13 @@ import (
 func main() {
 	config := utils.LoadConfiguration("config.toml")
 
-	logger := utils.CreateLog(config.LogFilePath)
+	logger, logFile := utils.CreateLog(config.LogFilePath)
+	defer logFile.Close()
 
-	dataBase := utils.CreateDB(logger)
+	dataBase := utils.CreateDB(logger, config)
 	dataBase.CreateTable()
 
-	selector := handler.CreateSelector(logger, dataBase, config)
+	selector := handler.CreateSelector(logger, dataBase, config, utils.CreateValidator(logger, config))
 
 	server := CreateServer(logger, config, selector)
 

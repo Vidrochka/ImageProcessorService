@@ -8,11 +8,16 @@ import (
 
 //Configuration - configuration structure
 type Configuration struct {
-	LogFilePath  string
-	Port         string
-	ServedURL    string
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
+	LogFilePath                 string
+	Port                        string
+	ServedURL                   string
+	ReadTimeout                 time.Duration
+	WriteTimeout                time.Duration
+	FileSaveExtensionList       string
+	ScaledImageRestoreExtension string
+	ScaledImageH                uint
+	ScaledImagew                uint
+	DataBasePath                string
 }
 
 //LoadConfiguration - load configuration file

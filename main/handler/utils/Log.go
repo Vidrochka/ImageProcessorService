@@ -6,7 +6,7 @@ import (
 )
 
 //CreateLog - create logger
-func CreateLog(logFilePath string) *log.Logger {
+func CreateLog(logFilePath string) (*log.Logger, *os.File) {
 	var file *os.File
 	var err error
 
@@ -31,5 +31,5 @@ func CreateLog(logFilePath string) *log.Logger {
 
 	logger := log.New(file, "", log.Ldate|log.Ltime|log.Lshortfile)
 
-	return logger
+	return logger, file
 }

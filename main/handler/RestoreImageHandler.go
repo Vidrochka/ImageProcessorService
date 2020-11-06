@@ -12,13 +12,14 @@ import (
 
 //RestoreImageHandler - restore image from db
 type RestoreImageHandler struct {
-	logger *log.Logger
-	db     *utils.DataBase
+	logger    *log.Logger
+	db        *utils.DataBase
+	validator *utils.Validator
 }
 
 //CreateRestore - create restore hendler
-func CreateRestore(logger *log.Logger, db *utils.DataBase) Handler {
-	var instanse Handler = &RestoreImageHandler{logger: logger, db: db}
+func CreateRestore(logger *log.Logger, db *utils.DataBase, validator *utils.Validator) Handler {
+	var instanse Handler = &RestoreImageHandler{logger: logger, db: db, validator: validator}
 
 	logger.Println("Restore handler created")
 
@@ -27,9 +28,10 @@ func CreateRestore(logger *log.Logger, db *utils.DataBase) Handler {
 
 //Work - implement Handler interfase
 func (handler *RestoreImageHandler) Work(resp http.ResponseWriter, req *http.Request) {
-	data, err := ioutil.ReadAll(req.Body)
+	var err error
 
-	if err != nil {
+	var data []byte
+	if data, err = ioutil.ReadAll(req.Body); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(418)
 		fmt.Fprintf(resp, dto.Response{Message: "Sorry, we cant take request", ResCode: 1}.ToJSON())
@@ -38,9 +40,7 @@ func (handler *RestoreImageHandler) Work(resp http.ResponseWriter, req *http.Req
 
 	var request dto.ImageIdRequest
 
-	err = json.Unmarshal(data, &request)
-
-	if err != nil {
+	if err = json.Unmarshal(data, &request); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(400)
 		fmt.Fprintf(resp, dto.Response{Message: "Invalid Json format \"%s" + err.Error() + "\"", ResCode: 2}.ToJSON())
@@ -48,9 +48,7 @@ func (handler *RestoreImageHandler) Work(resp http.ResponseWriter, req *http.Req
 	}
 
 	var image *dto.Image
-	image, err = handler.db.RestoreImage(request.ID)
-
-	if err != nil {
+	if image, err = handler.db.RestoreImage(request.ID); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(418)
 		fmt.Fprintf(resp, dto.Response{Message: "Sorry, we cant restore image", ResCode: 1}.ToJSON())

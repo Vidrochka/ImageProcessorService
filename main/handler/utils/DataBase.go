@@ -12,18 +12,19 @@ import (
 type DataBase struct {
 	db     *sql.DB
 	logger *log.Logger
+	config *Configuration
 }
 
 //CreateDB - create and connect db
-func CreateDB(logger *log.Logger) *DataBase {
-	db, err := sql.Open("sqlite3", "ImageCollection.db")
+func CreateDB(logger *log.Logger, config *Configuration) *DataBase {
+	db, err := sql.Open("sqlite3", config.DataBasePath)
 
 	if err != nil {
 		logger.Println(err)
 		panic(err)
 	}
 
-	return &DataBase{db: db, logger: logger}
+	return &DataBase{db: db, logger: logger, config: config}
 }
 
 //Close - close connection

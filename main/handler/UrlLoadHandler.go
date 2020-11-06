@@ -13,14 +13,15 @@ import (
 
 //URLLoadHandler - load image by url
 type URLLoadHandler struct {
-	logger            *log.Logger
-	db                *utils.DataBase
-	supportExtensions []string
+	logger    *log.Logger
+	db        *utils.DataBase
+	config    *utils.Configuration
+	validator *utils.Validator
 }
 
 //CreateURLLoader - create url loader handler
-func CreateURLLoader(logger *log.Logger, db *utils.DataBase, supportedExtension []string) Handler {
-	var instanse Handler = &URLLoadHandler{logger: logger, db: db, supportExtensions: supportedExtension}
+func CreateURLLoader(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator) Handler {
+	var instanse Handler = &URLLoadHandler{logger: logger, db: db, config: config, validator: validator}
 
 	logger.Println("Url load handler created")
 
@@ -29,9 +30,10 @@ func CreateURLLoader(logger *log.Logger, db *utils.DataBase, supportedExtension 
 
 //Work - implement Handler interfase
 func (handler *URLLoadHandler) Work(resp http.ResponseWriter, req *http.Request) {
-	data, err := ioutil.ReadAll(req.Body)
+	var err error
 
-	if err != nil {
+	var data []byte
+	if data, err = ioutil.ReadAll(req.Body); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(418)
 		fmt.Fprintf(resp, dto.Response{Message: "Sorry, we cant take request", ResCode: 1}.ToJSON())
@@ -39,10 +41,7 @@ func (handler *URLLoadHandler) Work(resp http.ResponseWriter, req *http.Request)
 	}
 
 	var request dto.URLLoadRequest
-
-	err = json.Unmarshal(data, &request)
-
-	if err != nil {
+	if err = json.Unmarshal(data, &request); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(400)
 		fmt.Fprintf(resp, dto.Response{Message: "Invalid Json format \"%s" + err.Error() + "\"", ResCode: 2}.ToJSON())
@@ -64,26 +63,22 @@ func (handler *URLLoadHandler) Work(resp http.ResponseWriter, req *http.Request)
 
 	handler.logger.Printf("File name: %s | File extension: %s", name, extension)
 
-	if !handler.IsSupportExtension(extension) {
-		handler.logger.Print("Not supported extension - " + extension + " | valid: " + strings.Join(handler.supportExtensions, "/"))
+	if !handler.validator.ValidateSavedFileExtension(extension) {
+		handler.logger.Print("Not supported extension - " + extension + " | valid: " + handler.config.ScaledImageRestoreExtension)
 		resp.WriteHeader(415)
-		fmt.Fprintf(resp, dto.Response{Message: "Not supported extension - " + extension + " | valid: " + strings.Join(handler.supportExtensions, "/"), ResCode: 2}.ToJSON())
+		fmt.Fprintf(resp, dto.Response{Message: "Not supported extension - " + extension + " | valid: " + handler.config.ScaledImageRestoreExtension, ResCode: 2}.ToJSON())
 		return
 	}
 
 	var imageResponse *http.Response
-	imageResponse, err = http.Get(request.URL)
-
-	if err != nil || imageResponse.StatusCode != http.StatusOK {
+	if imageResponse, err = http.Get(request.URL); err != nil || imageResponse.StatusCode != http.StatusOK {
 		handler.logger.Println(err)
 		resp.WriteHeader(400)
 		fmt.Fprintf(resp, dto.Response{Message: "Sorry, we cant take request by url - " + request.URL, ResCode: 1}.ToJSON())
 		return
 	}
 
-	data, err = ioutil.ReadAll(imageResponse.Body)
-
-	if err != nil {
+	if data, err = ioutil.ReadAll(imageResponse.Body); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(418)
 		fmt.Fprintf(resp, dto.Response{Message: "Sorry, we cant take request by url - " + request.URL, ResCode: 1}.ToJSON())
@@ -91,10 +86,7 @@ func (handler *URLLoadHandler) Work(resp http.ResponseWriter, req *http.Request)
 	}
 
 	var id int64
-
-	id, err = handler.db.SaveImage(name, extension, string(data))
-
-	if err != nil {
+	if id, err = handler.db.SaveImage(name, extension, string(data)); err != nil {
 		handler.logger.Printf("Image not saved - %s, error - %s", name, err.Error())
 		resp.WriteHeader(418)
 		fmt.Fprintf(resp, dto.Response{Message: "Sorry, we cant save image name = " + name + " extension = " + extension, ResCode: 1}.ToJSON())
@@ -105,15 +97,4 @@ func (handler *URLLoadHandler) Work(resp http.ResponseWriter, req *http.Request)
 	resp.WriteHeader(200)
 	fmt.Fprintf(resp, dto.Response{Message: dto.SaveImageResponseFile{ID: id, Name: name}.ToJSON(), ResCode: 0}.ToJSON())
 
-}
-
-//IsSupportExtension - check if extension support
-func (handler *URLLoadHandler) IsSupportExtension(extension string) bool {
-	for _, ext := range handler.supportExtensions {
-		if ext == extension {
-			return true
-		}
-	}
-
-	return false
 }
