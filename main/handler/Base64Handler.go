@@ -8,8 +8,8 @@ import (
 	"log"
 	"net/http"
 
-	"ImageProcessorService/main/handler/dto"
-	"ImageProcessorService/main/handler/utils"
+	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
 )
 
 //Base64Handler - work with base64 incode image

@@ -1,14 +1,15 @@
 package handler
 
 import (
-	"ImageProcessorService/main/handler/dto"
-	"ImageProcessorService/main/handler/utils"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
 )
 
 //URLLoadHandler - load image by url

@@ -1,13 +1,14 @@
 package handler
 
 import (
-	"ImageProcessorService/main/handler/dto"
-	"ImageProcessorService/main/handler/utils"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
 )
 
 //RestoreImageHandler - restore image from db

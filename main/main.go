@@ -1,12 +1,13 @@
 package main
 
 import (
-	"ImageProcessorService/main/handler"
-	"ImageProcessorService/main/handler/utils"
 	"context"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/anthill-com/ImageProcessorService/main/handler"
+	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
 )
 
 func main() {

@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"ImageProcessorService/main/handler/dto"
-	"ImageProcessorService/main/handler/utils"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -13,6 +11,9 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
 
 	"github.com/nfnt/resize"
 )

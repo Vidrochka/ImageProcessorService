@@ -1,13 +1,14 @@
 package main
 
 import (
-	"ImageProcessorService/main/handler"
-	"ImageProcessorService/main/handler/utils"
 	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/anthill-com/ImageProcessorService/main/handler"
+	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
 )
 
 //Server - server wrapper

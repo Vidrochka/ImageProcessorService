@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"ImageProcessorService/main/handler/dto"
-	"ImageProcessorService/main/handler/utils"
 	"bufio"
 	"bytes"
 	"fmt"
@@ -10,6 +8,9 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
+
+	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
 )
 
 //MultipartFormDataHandler - handler which parse multipart\form-data

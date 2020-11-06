@@ -1,13 +1,14 @@
 package utils
 
 import (
-	"ImageProcessorService/main/handler/dto"
 	"bufio"
 	"bytes"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
 )
 
 const _cfgPath string = "./test_config.toml"

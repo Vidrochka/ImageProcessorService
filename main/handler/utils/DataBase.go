@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"ImageProcessorService/main/handler/dto"
 	"database/sql"
 	"log"
+
+	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
 
 	_ "github.com/mattn/go-sqlite3"
 )
