@@ -19,11 +19,12 @@ type MultipartFormDataHandler struct {
 	db        *utils.DataBase
 	validator *utils.Validator
 	config    *utils.Configuration
+	fileSaver *utils.FileSaver
 }
 
 //CreateMultipartFormDataHandler - create restore hendler
-func CreateMultipartFormDataHandler(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator) Handler {
-	var instanse Handler = &MultipartFormDataHandler{logger: logger, db: db, config: config, validator: validator}
+func CreateMultipartFormDataHandler(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator, fileSaver *utils.FileSaver) Handler {
+	var instanse Handler = &MultipartFormDataHandler{logger: logger, db: db, config: config, validator: validator, fileSaver: fileSaver}
 
 	logger.Println("Restore handler created")
 
@@ -37,11 +38,15 @@ func (handler *MultipartFormDataHandler) Work(resp http.ResponseWriter, req *htt
 	if err = req.ParseMultipartForm(0); err != nil {
 		handler.logger.Println("We cant parse multipart: " + err.Error())
 		resp.WriteHeader(400)
+		resp.Header().Set("Content-Type", "application/json; charset=utf-8")
 		fmt.Fprintf(resp, dto.Response{Message: "We cant parse multipart", ResCode: 2}.ToJSON())
+		return
 	}
 
 	formdata := req.MultipartForm
 	files := formdata.File["image"]
+
+	resp.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	var requestCollection []dto.SaveImageResponseFile
 
@@ -74,8 +79,9 @@ func (handler *MultipartFormDataHandler) Work(resp http.ResponseWriter, req *htt
 			buffer.WriteString(scanner.Text())
 		}
 
+		hash := handler.fileSaver.SaveFile(fileName, fileExtension, buffer.String())
 		var id int64
-		if id, err = handler.db.SaveImage(fileName, fileExtension, buffer.String()); err != nil {
+		if id, err = handler.db.SaveImage(fileName, fileExtension, hash); err != nil {
 			handler.logger.Printf("Image not saved - %s, error - %s", fileName, err.Error())
 			continue
 		} else {
@@ -83,9 +89,6 @@ func (handler *MultipartFormDataHandler) Work(resp http.ResponseWriter, req *htt
 		}
 
 		requestCollection = append(requestCollection, dto.SaveImageResponseFile{ID: id, Name: fileName, Extension: fileExtension, Status: 1, ResMessage: ""})
-
-		fmt.Fprintf(resp, "Files uploaded successfully : ")
-		fmt.Fprintf(resp, files[i].Filename+"\n")
 	}
 
 	var response string
@@ -97,7 +100,7 @@ func (handler *MultipartFormDataHandler) Work(resp http.ResponseWriter, req *htt
 		return
 	}
 
-	response = dto.ImageCollection{File: requestCollection}.ToJSON()
+	response = dto.ImageCollectionResponse{File: requestCollection}.ToJSON()
 	handler.logger.Print(response)
 	resp.WriteHeader(200)
 	fmt.Fprintf(resp, dto.Response{Message: response, ResCode: 0}.ToJSON())

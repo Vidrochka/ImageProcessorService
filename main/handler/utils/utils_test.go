@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -164,4 +165,72 @@ func TestValidator(t *testing.T) {
 		t.Fatal("bat is not valid but true")
 	}
 
+}
+
+func TestFileSaver(t *testing.T) {
+	var err error
+
+	fileSavePath := "./FileStorage/"
+	previewFileFolder := "Preview"
+
+	fileName := "test"
+	fileExtension := "txt"
+	fileData := "Goraratos"
+
+	logger, logFile := CreateLog(_logPath)
+	defer os.Remove(_logPath)
+	defer logFile.Close()
+
+	saver := CreateFileSaver(logger, &Configuration{FileSavePath: fileSavePath, PreviewFileFolder: previewFileFolder})
+
+	hash := saver.SaveFile(fileName, fileExtension, fileData)
+
+	var file *os.File
+	if file, err = os.Open(fileSavePath + hash + "/" + fileName + "." + fileExtension); err != nil {
+		t.Log(err)
+		t.Error(err)
+	}
+
+	var data []byte
+	if data, err = ioutil.ReadAll(file); err != nil {
+		t.Log(err)
+		t.Error(err)
+	}
+
+	file.Close()
+
+	if string(data) != fileData {
+		t.Fatalf("File data should be [%s] but [%s]", fileData, data)
+	}
+
+	t.Log("Save file - ok")
+
+	saver.SavePreview(fileName+"2", fileExtension+"2", fileData+"small", hash)
+
+	var file2 *os.File
+	if file2, err = os.Open(fileSavePath + hash + "/" + previewFileFolder + "/" + fileName + "2" + "." + fileExtension + "2"); err != nil {
+		t.Error(err)
+	}
+
+	if data, err = ioutil.ReadAll(file2); err != nil {
+		t.Error(err)
+	}
+
+	file2.Close()
+
+	if string(data) != fileData+"small" {
+		t.Fatalf("File data should be [%s] but [%s]", fileData+"small", data)
+	}
+
+	t.Log("Save preview file - ok")
+
+	if strData := saver.RestoreFile(fileName, fileExtension, hash); strData != fileData {
+		t.Fatalf("File data should be [%s] but [%s]", fileData, strData)
+	}
+
+	t.Log("Restore file - ok")
+
+	if err = os.RemoveAll(fileSavePath); err != nil {
+		t.Error(err)
+	}
 }

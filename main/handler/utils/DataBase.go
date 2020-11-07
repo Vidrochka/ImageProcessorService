@@ -43,8 +43,8 @@ func (dataBase DataBase) CreateTable() error {
 	_, err := dataBase.db.Exec("CREATE TABLE IF NOT EXISTS [Images] (" +
 		"[Id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
 		"[Extension] NVARCHAR(64) NOT NULL," +
-		"[Name] VARCHAR(128) NOT NULL," +
-		"[Data] TEXT NOT NULL," +
+		"[Name] NVARCHAR(128) NOT NULL," +
+		"[Path] NVARCHAR(128) NOT NULL," +
 		"[DateCreated] TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
 
 	if err != nil {
@@ -58,9 +58,9 @@ func (dataBase DataBase) CreateTable() error {
 }
 
 //SaveImage - save imafe in db
-func (dataBase DataBase) SaveImage(name, extension, data string) (int64, error) {
-	result, err := dataBase.db.Exec("insert into Images (Name, Extension, Data) values ($1, $2, $3)",
-		name, extension, data)
+func (dataBase DataBase) SaveImage(name, extension, path string) (int64, error) {
+	result, err := dataBase.db.Exec("insert into Images (Name, Extension, Path) values (?, ?, ?)",
+		name, extension, path)
 
 	if err != nil {
 		dataBase.logger.Println(err)
@@ -72,7 +72,7 @@ func (dataBase DataBase) SaveImage(name, extension, data string) (int64, error) 
 
 //RestoreImage - restore image by id
 func (dataBase DataBase) RestoreImage(id int64) (*dto.Image, error) {
-	row, err := dataBase.db.Query("SELECT * FROM Images WHERE Id = $1", id)
+	row, err := dataBase.db.Query("SELECT Name, Extension, Path FROM Images WHERE Id = $1", id)
 
 	if err != nil {
 		dataBase.logger.Println(err)
@@ -82,10 +82,9 @@ func (dataBase DataBase) RestoreImage(id int64) (*dto.Image, error) {
 	image := dto.Image{}
 
 	row.Next()
+	err = row.Scan(&image.Name, &image.Extension, &image.Data)
 
-	var ID int
-	var time string
-	err = row.Scan(&ID, &image.Extension, &image.Name, &image.Data, &time)
+	dataBase.logger.Println(image.Data)
 
 	if err != nil {
 		dataBase.logger.Println(err)

@@ -19,7 +19,9 @@ func main() {
 	dataBase := utils.CreateDB(logger, config)
 	dataBase.CreateTable()
 
-	selector := handler.CreateSelector(logger, dataBase, config, utils.CreateValidator(logger, config))
+	fileSaver := utils.CreateFileSaver(logger, config)
+
+	selector := handler.CreateSelector(logger, dataBase, config, utils.CreateValidator(logger, config), fileSaver)
 
 	server := CreateServer(logger, config, selector)
 

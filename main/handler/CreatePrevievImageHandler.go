@@ -18,26 +18,29 @@ import (
 	"github.com/nfnt/resize"
 )
 
-//ScaleImageHandler - make square image
-type ScaleImageHandler struct {
+//PrevievImageHandler - make square image
+type PrevievImageHandler struct {
 	logger    *log.Logger
 	db        *utils.DataBase
 	config    *utils.Configuration
 	validator *utils.Validator
+	fileSaver *utils.FileSaver
 }
 
-//CreateScaleImageHandler - create url loader handler
-func CreateScaleImageHandler(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator) Handler {
-	var instanse Handler = &ScaleImageHandler{logger: logger, db: db, config: config, validator: validator}
+//CreatePrevievImageHandler - create url loader handler
+func CreatePrevievImageHandler(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator, fileSaver *utils.FileSaver) Handler {
+	var instanse Handler = &PrevievImageHandler{logger: logger, db: db, config: config, validator: validator, fileSaver: fileSaver}
 
-	logger.Println("Square image handler created")
+	logger.Println("Previev image handler created")
 
 	return instanse
 }
 
 //Work - work with scale image request
-func (handler *ScaleImageHandler) Work(resp http.ResponseWriter, req *http.Request) {
+func (handler *PrevievImageHandler) Work(resp http.ResponseWriter, req *http.Request) {
 	var err error
+
+	resp.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	var data []byte
 	if data, err = ioutil.ReadAll(req.Body); err != nil {
@@ -47,7 +50,7 @@ func (handler *ScaleImageHandler) Work(resp http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	var request dto.ImageIdRequest
+	var request dto.ImageIDRequest
 	if err = json.Unmarshal(data, &request); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(400)
@@ -63,6 +66,12 @@ func (handler *ScaleImageHandler) Work(resp http.ResponseWriter, req *http.Reque
 		return
 	}
 
+	var hash string = restoreImage.Data
+	handler.logger.Println("Hash: " + hash)
+
+	restoreData := handler.fileSaver.RestoreFile(restoreImage.Name, restoreImage.Extension, restoreImage.Data)
+	restoreImage.Data = restoreData
+
 	if !handler.validator.ValidateScaledFileExtension(restoreImage.Extension) {
 		handler.logger.Print("Not supported extension - " + restoreImage.Extension + " | valid: " + handler.config.ScaledImageRestoreExtension)
 		resp.WriteHeader(415)
@@ -77,6 +86,7 @@ func (handler *ScaleImageHandler) Work(resp http.ResponseWriter, req *http.Reque
 			handler.logger.Println("Not valid jpeg data: " + err.Error())
 			resp.WriteHeader(418)
 			fmt.Fprintf(resp, dto.Response{Message: "Not valid jpeg data", ResCode: 2}.ToJSON())
+			return
 		}
 		break
 	case "jpg":
@@ -84,6 +94,7 @@ func (handler *ScaleImageHandler) Work(resp http.ResponseWriter, req *http.Reque
 			handler.logger.Println("Not valid jpg data: " + err.Error())
 			resp.WriteHeader(418)
 			fmt.Fprintf(resp, dto.Response{Message: "Not valid jpg data", ResCode: 2}.ToJSON())
+			return
 		}
 		break
 	case "png":
@@ -91,13 +102,15 @@ func (handler *ScaleImageHandler) Work(resp http.ResponseWriter, req *http.Reque
 			handler.logger.Println("Not valid png data: " + err.Error())
 			resp.WriteHeader(418)
 			fmt.Fprintf(resp, dto.Response{Message: "Not valid png data", ResCode: 2}.ToJSON())
+			return
 		}
 		break
 	default:
 		panic("There is no handler for that extansion, fix that")
 	}
 
-	resizedImage := resize.Resize(handler.config.ScaledImagew, handler.config.ScaledImageH, imageData, resize.Lanczos3)
+	handler.logger.Printf("Resize image to: w = %d, h = %d", handler.config.ScaledImageW, handler.config.ScaledImageH)
+	resizedImage := resize.Resize(handler.config.ScaledImageW, handler.config.ScaledImageH, imageData, resize.Lanczos3)
 
 	buf := bytes.NewBufferString("")
 
@@ -110,6 +123,8 @@ func (handler *ScaleImageHandler) Work(resp http.ResponseWriter, req *http.Reque
 	}
 
 	restoreImage.Data = buf.String()
+
+	handler.fileSaver.SavePreview(restoreImage.Name, restoreImage.Extension, restoreImage.Data, hash)
 
 	response := restoreImage.ToJSON()
 	handler.logger.Print(response)

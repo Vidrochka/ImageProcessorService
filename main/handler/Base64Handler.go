@@ -18,11 +18,12 @@ type Base64Handler struct {
 	db        *utils.DataBase
 	config    *utils.Configuration
 	validator *utils.Validator
+	fileSaver *utils.FileSaver
 }
 
 //CreateBase64 - create base64 request handler
-func CreateBase64(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator) Handler {
-	var instanse Handler = &Base64Handler{logger: logger, db: db, config: config, validator: validator}
+func CreateBase64(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator, fileSaver *utils.FileSaver) Handler {
+	var instanse Handler = &Base64Handler{logger: logger, db: db, config: config, validator: validator, fileSaver: fileSaver}
 
 	logger.Println("Base64 handler created")
 
@@ -33,6 +34,8 @@ func CreateBase64(logger *log.Logger, db *utils.DataBase, config *utils.Configur
 func (handler *Base64Handler) Work(resp http.ResponseWriter, req *http.Request) {
 	var err error
 
+	resp.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	var data []byte
 	if data, err = ioutil.ReadAll(req.Body); err != nil {
 		handler.logger.Println(err)
@@ -41,12 +44,12 @@ func (handler *Base64Handler) Work(resp http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	var request dto.Base64Request
+	var request dto.ImageCollectionRequest
 
 	if err = json.Unmarshal(data, &request); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(400)
-		fmt.Fprintf(resp, dto.Response{Message: "Invalid Json format \"%s" + err.Error() + "\"", ResCode: 2}.ToJSON())
+		fmt.Fprintf(resp, dto.Response{Message: "Invalid Json format " + err.Error() + "\"", ResCode: 2}.ToJSON())
 		return
 	}
 
@@ -68,7 +71,8 @@ func (handler *Base64Handler) Work(resp http.ResponseWriter, req *http.Request) 
 			continue
 		}
 
-		if id, err = handler.db.SaveImage(file.Name, file.Extension, string(imgDecodeStr)); err != nil {
+		hash := handler.fileSaver.SaveFile(file.Name, file.Extension, string(imgDecodeStr))
+		if id, err = handler.db.SaveImage(file.Name, file.Extension, hash); err != nil {
 			handler.logger.Printf("Image not saved - %s, error - %s", file.Name, err.Error())
 			continue
 		} else {
@@ -87,7 +91,7 @@ func (handler *Base64Handler) Work(resp http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	response = dto.ImageCollection{File: requestCollection}.ToJSON()
+	response = dto.ImageCollectionResponse{File: requestCollection}.ToJSON()
 	handler.logger.Print(response)
 	resp.WriteHeader(200)
 	fmt.Fprintf(resp, dto.Response{Message: response, ResCode: 0}.ToJSON())

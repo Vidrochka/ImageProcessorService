@@ -16,8 +16,10 @@ type Configuration struct {
 	FileSaveExtensionList       string
 	ScaledImageRestoreExtension string
 	ScaledImageH                uint
-	ScaledImagew                uint
+	ScaledImageW                uint
 	DataBasePath                string
+	FileSavePath                string
+	PreviewFileFolder           string
 }
 
 //LoadConfiguration - load configuration file

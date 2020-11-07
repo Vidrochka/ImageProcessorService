@@ -4,8 +4,8 @@ import "encoding/json"
 
 //Response - ResCode may be 0 - success / 1 - server fail / 2 - IncorrectRequest
 type Response struct {
-	Message string
-	ResCode int
+	Message string `json:"message"`
+	ResCode int    `json:"resCode"`
 }
 
 //ToJSON - convert Response to json

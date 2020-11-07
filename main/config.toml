@@ -6,5 +6,7 @@
 "FileSaveExtensionList" = "jpg,jpeg,png"
 "ScaledImageRestoreExtension" = "jpg,jpeg,png"
 "ScaledImageH" = 100
-"ScapedImageW" = 100
+"ScaledImageW" = 100
 "DataBasePath" = "./ImageCollection.db"
+"FileSavePath" = "./FileStorage/"
+"PreviewFileFolder" = "Preview"

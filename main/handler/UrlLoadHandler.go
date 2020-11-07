@@ -18,11 +18,12 @@ type URLLoadHandler struct {
 	db        *utils.DataBase
 	config    *utils.Configuration
 	validator *utils.Validator
+	fileSaver *utils.FileSaver
 }
 
 //CreateURLLoader - create url loader handler
-func CreateURLLoader(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator) Handler {
-	var instanse Handler = &URLLoadHandler{logger: logger, db: db, config: config, validator: validator}
+func CreateURLLoader(logger *log.Logger, db *utils.DataBase, config *utils.Configuration, validator *utils.Validator, fileSaver *utils.FileSaver) Handler {
+	var instanse Handler = &URLLoadHandler{logger: logger, db: db, config: config, validator: validator, fileSaver: fileSaver}
 
 	logger.Println("Url load handler created")
 
@@ -32,6 +33,8 @@ func CreateURLLoader(logger *log.Logger, db *utils.DataBase, config *utils.Confi
 //Work - implement Handler interfase
 func (handler *URLLoadHandler) Work(resp http.ResponseWriter, req *http.Request) {
 	var err error
+
+	resp.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	var data []byte
 	if data, err = ioutil.ReadAll(req.Body); err != nil {
@@ -86,8 +89,9 @@ func (handler *URLLoadHandler) Work(resp http.ResponseWriter, req *http.Request)
 		return
 	}
 
+	hash := handler.fileSaver.SaveFile(name, extension, string(data))
 	var id int64
-	if id, err = handler.db.SaveImage(name, extension, string(data)); err != nil {
+	if id, err = handler.db.SaveImage(name, extension, hash); err != nil {
 		handler.logger.Printf("Image not saved - %s, error - %s", name, err.Error())
 		resp.WriteHeader(418)
 		fmt.Fprintf(resp, dto.Response{Message: "Sorry, we cant save image name = " + name + " extension = " + extension, ResCode: 1}.ToJSON())
@@ -96,6 +100,6 @@ func (handler *URLLoadHandler) Work(resp http.ResponseWriter, req *http.Request)
 
 	handler.logger.Printf("Image saved - %s, id - %d", name, id)
 	resp.WriteHeader(200)
-	fmt.Fprintf(resp, dto.Response{Message: dto.SaveImageResponseFile{ID: id, Name: name}.ToJSON(), ResCode: 0}.ToJSON())
+	fmt.Fprintf(resp, dto.Response{Message: dto.SaveImageResponseFile{ID: id, Name: name, Extension: extension, Status: 1}.ToJSON(), ResCode: 0}.ToJSON())
 
 }

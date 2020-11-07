@@ -16,11 +16,12 @@ type RestoreImageHandler struct {
 	logger    *log.Logger
 	db        *utils.DataBase
 	validator *utils.Validator
+	fileSaver *utils.FileSaver
 }
 
 //CreateRestore - create restore hendler
-func CreateRestore(logger *log.Logger, db *utils.DataBase, validator *utils.Validator) Handler {
-	var instanse Handler = &RestoreImageHandler{logger: logger, db: db, validator: validator}
+func CreateRestore(logger *log.Logger, db *utils.DataBase, validator *utils.Validator, fileSaver *utils.FileSaver) Handler {
+	var instanse Handler = &RestoreImageHandler{logger: logger, db: db, validator: validator, fileSaver: fileSaver}
 
 	logger.Println("Restore handler created")
 
@@ -31,6 +32,8 @@ func CreateRestore(logger *log.Logger, db *utils.DataBase, validator *utils.Vali
 func (handler *RestoreImageHandler) Work(resp http.ResponseWriter, req *http.Request) {
 	var err error
 
+	resp.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	var data []byte
 	if data, err = ioutil.ReadAll(req.Body); err != nil {
 		handler.logger.Println(err)
@@ -39,12 +42,12 @@ func (handler *RestoreImageHandler) Work(resp http.ResponseWriter, req *http.Req
 		return
 	}
 
-	var request dto.ImageIdRequest
+	var request dto.ImageIDRequest
 
 	if err = json.Unmarshal(data, &request); err != nil {
 		handler.logger.Println(err)
 		resp.WriteHeader(400)
-		fmt.Fprintf(resp, dto.Response{Message: "Invalid Json format \"%s" + err.Error() + "\"", ResCode: 2}.ToJSON())
+		fmt.Fprintf(resp, dto.Response{Message: "Invalid Json format \"" + err.Error() + "\"", ResCode: 2}.ToJSON())
 		return
 	}
 
@@ -55,6 +58,9 @@ func (handler *RestoreImageHandler) Work(resp http.ResponseWriter, req *http.Req
 		fmt.Fprintf(resp, dto.Response{Message: "Sorry, we cant restore image", ResCode: 1}.ToJSON())
 		return
 	}
+
+	restoreData := handler.fileSaver.RestoreFile(image.Name, image.Extension, image.Data)
+	image.Data = restoreData
 
 	response := image.ToJSON()
 	handler.logger.Print(response)
