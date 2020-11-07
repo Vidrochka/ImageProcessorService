@@ -1,0 +1,7 @@
+version: "3"
+services:
+  server:
+    build: ./
+    command: ./ImageProcessorService
+    ports:
+      - 4183:4183

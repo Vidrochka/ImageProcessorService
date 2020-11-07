@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/dto"
 
 	_ "github.com/mattn/go-sqlite3"
 )

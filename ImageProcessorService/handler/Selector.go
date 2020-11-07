@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/utils"
 )
 
 //Selector - select handler

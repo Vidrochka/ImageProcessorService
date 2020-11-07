@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
-	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/utils"
 )
 
 const _cfgPath string = "./test_config.toml"

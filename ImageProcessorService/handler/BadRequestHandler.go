@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/dto"
 )
 
 //RequestErrorHandler - bad request handler

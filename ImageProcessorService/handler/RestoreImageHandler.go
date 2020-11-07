@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/anthill-com/ImageProcessorService/main/handler/dto"
-	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/dto"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/utils"
 )
 
 //RestoreImageHandler - restore image from db

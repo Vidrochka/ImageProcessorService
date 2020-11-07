@@ -6,12 +6,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/anthill-com/ImageProcessorService/main/handler"
-	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/utils"
 )
 
 func main() {
-	config := utils.LoadConfiguration("config.toml")
+	config := utils.LoadConfiguration("./config.toml")
 
 	logger, logFile := utils.CreateLog(config.LogFilePath)
 	defer logFile.Close()

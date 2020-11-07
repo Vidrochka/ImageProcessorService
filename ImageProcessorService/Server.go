@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/anthill-com/ImageProcessorService/main/handler"
-	"github.com/anthill-com/ImageProcessorService/main/handler/utils"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler"
+	"github.com/anthill-com/ImageProcessorService/ImageProcessorService/handler/utils"
 )
 
 //Server - server wrapper
