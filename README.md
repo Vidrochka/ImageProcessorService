@@ -16,7 +16,7 @@ Rest service with single post method for image processing
 1. По переданному id достается хэш из базы
 2. По хэшу берется изображение из хэш-папки в общей папки изображений
 3. Если необходимо превью - делается превью и созраняется в папку превью в папке хэш
-4. Возвращается строка с данными изображения
+4. Возвращается строка с данными изображения закодированными в base64
 
 Сервис выдает ответы в json формате:
 
@@ -72,9 +72,14 @@ Rest service with single post method for image processing
 
 ```
 {
-  "message": "{"file":[{"id":1,"name":"ff14","extension":"png","statis":1,"resMessage":""},{"file":[{"id":1,"name":"lilil","extension":"jpg","statis":1,"resMessage":""}]}",
+  "message": "base64 строка",
   "resCode": 0
 }
+```
+
+Формат дешифроманной base64 строки:
+```
+{"file":[{"id":1,"name":"ff14","extension":"png","statis":1,"resMessage":""},{"file":[{"id":1,"name":"lilil","extension":"jpg","statis":1,"resMessage":""}]}
 ```
 
 В массиве file лежит массив данных отдельно по каждому изображению
@@ -105,9 +110,14 @@ url - адрес изображения
 
 ```
 {
-  "message": "{"id":3,"name":"peacock_PNG42","extension":"png","statis":1,"resMessage":""}",
+  "message": "base64 строка",
   "resCode": 0
 }
+```
+
+Формат дешифроманной base64 строки:
+```
+{"id":3,"name":"peacock_PNG42","extension":"png","statis":1,"resMessage":""}
 ```
 
 * id - id в базе
@@ -129,9 +139,14 @@ url - адрес изображения
 
 ```
 {
-  "message": "{"file":[{"id":1,"name":"Новый документ","extension":"jpg","statis":1,"resMessage":""},{"id":2,"name":"Новый текстовый документ","extension":"png","statis":1,"resMessage":""}]}",
+  "message": "base64 строка",
   "resCode": 0
 }
+```
+
+Формат дешифроманной base64 строки:
+```
+{"file":[{"id":1,"name":"Новый документ","extension":"jpg","statis":1,"resMessage":""},{"id":2,"name":"Новый текстовый документ","extension":"png","statis":1,"resMessage":""}]}
 ```
 
 * file - массив данных по каждой фотографии
@@ -161,9 +176,14 @@ url - адрес изображения
 
 ```
 {
-  "message": "{"name":"ff14","extension":"png","data":"строка с изображением"}",
+  "message": "base64 строка",
   "resCode": 0
 }
+```
+
+Формат дешифроманной base64 строки:
+```
+{"name":"ff14","extension":"png","data":"строка с изображением"}
 ```
 
 * name - название изображения
@@ -190,9 +210,14 @@ url - адрес изображения
 
 ```
 {
-  "message": "{"name":"ff14","extension":"png","data":"строка с изображением"}",
+  "message": "base64 строка",
   "resCode": 0
 }
+```
+
+Формат дешифроманной base64 строки:
+```
+{"name":"ff14","extension":"png","data":"строка с изображением"}
 ```
 
 * name - название изображения
