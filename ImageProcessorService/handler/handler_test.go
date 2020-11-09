@@ -38,7 +38,9 @@ func CreateUtils() (*log.Logger, *os.File, *utils.DataBase, *utils.Configuration
 	}
 
 	db := utils.CreateDB(logger, config)
-	db.CreateTable()
+	if err := db.CreateTable(); err != nil {
+		panic(err)
+	}
 
 	validator := utils.CreateValidator(logger, config)
 
@@ -63,16 +65,25 @@ func TestBase64Handler(t *testing.T) {
 	handler := CreateBase64(log, db, cfg, valid, saver)
 	handler.Work(w, r)
 
-	responseByte, _ := ioutil.ReadAll(w.Body)
-	t.Log(string(responseByte))
+	defer os.RemoveAll(cfg.FileSavePath)
 
 	response := dto.Response{}
-	json.Unmarshal(responseByte, &response)
+	if responseByte, err := ioutil.ReadAll(w.Body); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(string(responseByte))
+
+		if err := json.Unmarshal(responseByte, &response); err != nil {
+			t.Error(err)
+		}
+	}
 
 	imageCollection := dto.ImageCollectionResponse{File: []dto.SaveImageResponseFile{}}
 
 	messageBuff := bytes.NewBufferString(response.Message)
-	json.Unmarshal(messageBuff.Bytes(), &imageCollection)
+	if err := json.Unmarshal(messageBuff.Bytes(), &imageCollection); err != nil {
+		t.Error(err)
+	}
 
 	if imageCollection.File[0].Name != "ff14" {
 		t.Fatalf("File name not Equal. ff14 != %s", imageCollection.File[0].Name)
@@ -101,8 +112,6 @@ func TestBase64Handler(t *testing.T) {
 	}
 
 	t.Log("Unvalid Extension pass")
-
-	os.RemoveAll(cfg.FileSavePath)
 }
 
 func TestMultipatrFormDataHandler(t *testing.T) {
@@ -131,16 +140,21 @@ func TestMultipatrFormDataHandler(t *testing.T) {
 	handler := CreateMultipartFormDataHandler(log, db, cfg, valid, saver)
 	handler.Work(w, r)
 
-	responseByte, _ := ioutil.ReadAll(w.Body)
-	t.Log(string(responseByte))
-
 	response := dto.Response{}
-	json.Unmarshal(responseByte, &response)
+	if responseByte, err := ioutil.ReadAll(w.Body); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(string(responseByte))
+
+		if err := json.Unmarshal(responseByte, &response); err != nil {
+			t.Error(err)
+		}
+	}
 
 	imageCollection := dto.ImageCollectionResponse{File: []dto.SaveImageResponseFile{}}
-
-	messageBuff := bytes.NewBufferString(response.Message)
-	json.Unmarshal(messageBuff.Bytes(), &imageCollection)
+	if err := json.Unmarshal([]byte(response.Message), &imageCollection); err != nil {
+		t.Error(err)
+	}
 
 	if imageCollection.File[0].Name != "Новый текстовый документ (2)" {
 		t.Fatalf("File name not Equal. ff14 != %s", imageCollection.File[0].Name)
@@ -187,25 +201,39 @@ func TestRestoreImageHandler(t *testing.T) {
 	defer db.Close()
 
 	hash := saver.SaveFile(fileName, fileExtension, fileData)
-	id, _ := db.SaveImage(fileName, fileExtension, hash)
 
-	buff := "{\"id\": " + fmt.Sprint(id) + "}"
+	var buff string
+	if id, err := db.SaveImage(fileName, fileExtension, hash); err != nil {
+		t.Error(err)
+	} else {
+		buff = "{\"id\": " + fmt.Sprint(id) + "}"
+	}
+
 	r := httptest.NewRequest("POST", "/", strings.NewReader(buff))
 	w := httptest.NewRecorder()
 
 	handler := CreateRestore(log, db, valid, saver)
 	handler.Work(w, r)
 
-	responseByte, _ := ioutil.ReadAll(w.Body)
-	t.Log(string(responseByte))
-
 	response := dto.Response{}
-	json.Unmarshal(responseByte, &response)
+	if responseByte, err := ioutil.ReadAll(w.Body); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(string(responseByte))
+
+		if err = json.Unmarshal(responseByte, &response); err != nil {
+			t.Error(err)
+		}
+	}
 
 	image := dto.Image{}
-
-	data, _ := base64.StdEncoding.DecodeString(response.Message)
-	json.Unmarshal(data, &image)
+	if data, err := base64.StdEncoding.DecodeString(response.Message); err != nil {
+		t.Error(err)
+	} else {
+		if err = json.Unmarshal(data, &image); err != nil {
+			t.Error(err)
+		}
+	}
 
 	if image.Name != fileName {
 		t.Fatalf("File name not Equal. %s != %s", fileName, image.Name)
@@ -225,8 +253,6 @@ func TestRestoreImageHandler(t *testing.T) {
 }
 
 func TestUrlLoadHandler(t *testing.T) {
-	var err error
-
 	fileName := "peacock_PNG42"
 	fileExtension := "png"
 
@@ -245,16 +271,23 @@ func TestUrlLoadHandler(t *testing.T) {
 	handler := CreateURLLoader(log, db, cfg, valid, saver)
 	handler.Work(w, r)
 
-	responseByte, _ := ioutil.ReadAll(w.Body)
-	t.Log(string(responseByte))
+	defer os.RemoveAll(cfg.FileSavePath)
 
 	response := dto.Response{}
-	json.Unmarshal(responseByte, &response)
+	if responseByte, err := ioutil.ReadAll(w.Body); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(string(responseByte))
+
+		if err = json.Unmarshal(responseByte, &response); err != nil {
+			t.Error(err)
+		}
+	}
 
 	image := dto.SaveImageResponseFile{}
-
-	messageBuff := bytes.NewBufferString(response.Message)
-	json.Unmarshal(messageBuff.Bytes(), &image)
+	if err := json.Unmarshal([]byte(response.Message), &image); err != nil {
+		t.Error(err)
+	}
 
 	if image.Name != fileName {
 		t.Fatalf("File name not Equal. %s != %s", fileName, image.Name)
@@ -270,26 +303,132 @@ func TestUrlLoadHandler(t *testing.T) {
 
 	t.Log("Valid Extension pass")
 
-	var imageFromDB *dto.Image
-	if imageFromDB, err = db.RestoreImage(image.ID); err != nil {
-		t.Error(err)
-	}
-
-	var file *os.File
-	if file, err = os.Open(cfg.FileSavePath + imageFromDB.Data + "/peacock_PNG42.png"); err != nil {
-		t.Error(err)
-	}
-
 	var data []byte
-	if data, err = ioutil.ReadAll(file); err != nil {
+	if imageFromDB, err := db.RestoreImage(image.ID); err != nil {
 		t.Error(err)
+	} else {
+		if file, err := os.Open(cfg.FileSavePath + imageFromDB.Data + "/peacock_PNG42.png"); err != nil {
+			t.Error(err)
+		} else {
+			defer file.Close()
+
+			if data, err = ioutil.ReadAll(file); err != nil {
+				t.Error(err)
+			}
+		}
 	}
 
 	if len(data) == 0 {
 		t.Fatal("There is nothng data")
 	}
+}
 
-	os.RemoveAll(cfg.FileSavePath)
+func TestRestorePreviewImageHandler(t *testing.T) {
+	urlPath := "https://steemitimages.com/DQmfWCZqLByZrs9oGSmYtH97iRwuwsuDsoZvK9EEpfXwxV7/"
+	fileName := "pexels-photo-417074"
+	fileExtension := "jpeg"
+
+	log, logFile, db, cfg, valid, saver := CreateUtils()
+
+	defer os.Remove(logFile.Name())
+	defer logFile.Close()
+
+	defer os.Remove(_dbPath)
+	defer db.Close()
+
+	buff := "{\"url\": \"" + urlPath + fileName + "." + fileExtension + "\"}"
+	r := httptest.NewRequest("POST", "/", strings.NewReader(buff))
+	w := httptest.NewRecorder()
+
+	saveImageHandler := CreateURLLoader(log, db, cfg, valid, saver)
+	saveImageHandler.Work(w, r)
+
+	saveImageResponse := dto.Response{}
+	if saveImageResponseByte, err := ioutil.ReadAll(w.Body); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(string(saveImageResponseByte))
+
+		if err = json.Unmarshal(saveImageResponseByte, &saveImageResponse); err != nil {
+			t.Error(err)
+		}
+	}
+
+	saveImage := dto.SaveImageResponseFile{}
+	if err := json.Unmarshal([]byte(saveImageResponse.Message), &saveImage); err != nil {
+		t.Error(err)
+	}
+
+	buff = "{\"id\": " + fmt.Sprint(saveImage.ID) + "}"
+	r = httptest.NewRequest("POST", "/", strings.NewReader(buff))
+	w = httptest.NewRecorder()
+
+	handler := CreatePrevievImageHandler(log, db, cfg, valid, saver)
+	handler.Work(w, r)
+
+	defer os.RemoveAll(cfg.FileSavePath)
+
+	response := dto.Response{}
+	if responseByte, err := ioutil.ReadAll(w.Body); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(string(responseByte))
+
+		if err = json.Unmarshal(responseByte, &response); err != nil {
+			t.Error(err)
+		}
+
+		t.Log(response.Message)
+	}
+
+	image := dto.Image{}
+	if data, err := base64.StdEncoding.DecodeString(response.Message); err != nil {
+		t.Error(err)
+	} else {
+		if err = json.Unmarshal(data, &image); err != nil {
+			t.Error()
+		}
+	}
+
+	if image.Name != fileName {
+		t.Fatalf("File name not Equal. %s != %s", fileName, image.Name)
+	}
+
+	if image.Extension != fileExtension {
+		t.Fatalf("File extension not Equal. %s != %s", fileExtension, image.Extension)
+	}
+
+	var genFileData []byte
+	if imageFromDB, err := db.RestoreImage(saveImage.ID); err != nil {
+		t.Error(err)
+	} else {
+		if file, err := os.Open(cfg.FileSavePath + imageFromDB.Data + "/" + cfg.PreviewFileFolder + "/" + fileName + "." + fileExtension + ""); err != nil {
+			t.Error(err)
+		} else {
+			if genFileData, err = ioutil.ReadAll(file); err != nil {
+				t.Error(err)
+			}
+
+			file.Close()
+		}
+	}
+
+	var requiredData []byte
+	if file, err := os.Open("./test_data/test_previev_image.jpeg"); err != nil {
+		t.Error(err)
+	} else {
+		if requiredData, err = ioutil.ReadAll(file); err != nil {
+			t.Error(err)
+		}
+
+		file.Close()
+	}
+
+	if string(genFileData) != string(requiredData) {
+		t.Fatal("File data not Equal")
+	}
+
+	t.Log("Valid Extension pass")
 }
 
 func TestSelectorBadUrl(t *testing.T) {
