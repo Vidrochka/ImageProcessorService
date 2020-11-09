@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -62,7 +63,7 @@ func (handler *RestoreImageHandler) Work(resp http.ResponseWriter, req *http.Req
 	restoreData := handler.fileSaver.RestoreFile(image.Name, image.Extension, image.Data)
 	image.Data = restoreData
 
-	response := image.ToJSON()
+	response := base64.StdEncoding.EncodeToString([]byte(image.ToJSON()))
 	handler.logger.Print(response)
 	resp.WriteHeader(200)
 	fmt.Fprintf(resp, dto.Response{Message: response, ResCode: 0}.ToJSON())

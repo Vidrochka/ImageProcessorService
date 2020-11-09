@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -32,6 +33,8 @@ func CreateUtils() (*log.Logger, *os.File, *utils.DataBase, *utils.Configuration
 		FileSavePath:                "./FileStorage/",
 		PreviewFileFolder:           "Preview",
 		ServedURL:                   "/",
+		ScaledImageH:                100,
+		ScaledImageW:                100,
 	}
 
 	db := utils.CreateDB(logger, config)
@@ -201,8 +204,8 @@ func TestRestoreImageHandler(t *testing.T) {
 
 	image := dto.Image{}
 
-	messageBuff := bytes.NewBufferString(response.Message)
-	json.Unmarshal(messageBuff.Bytes(), &image)
+	data, _ := base64.StdEncoding.DecodeString(response.Message)
+	json.Unmarshal(data, &image)
 
 	if image.Name != fileName {
 		t.Fatalf("File name not Equal. %s != %s", fileName, image.Name)
@@ -283,7 +286,7 @@ func TestUrlLoadHandler(t *testing.T) {
 	}
 
 	if len(data) == 0 {
-		t.Fatal("Yhere is nothng data")
+		t.Fatal("There is nothng data")
 	}
 
 	os.RemoveAll(cfg.FileSavePath)
