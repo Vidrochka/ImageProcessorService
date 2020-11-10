@@ -11,3 +11,5 @@ RUN go install github.com/anthill-com/ImageProcessorService/ImageProcessorServic
 COPY ./ImageProcessorService/config.toml /go/bin/
 
 WORKDIR /go/bin/
+
+ENTRYPOINT ./ImageProcessorService
